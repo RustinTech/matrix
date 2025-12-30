@@ -1,0 +1,2066 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rustin's Kanban</title>
+    <script src="html2pdf.bundle.min.js"></script>
+    <style>
+        @font-face {
+            font-family: 'Inter';
+            src: url('fonts/Inter-Regular.woff2') format('woff2');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: 'Inter';
+            src: url('fonts/Inter-Medium.woff2') format('woff2');
+            font-weight: 500;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: 'Inter';
+            src: url('fonts/Inter-SemiBold.woff2') format('woff2');
+            font-weight: 600;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: 'Inter';
+            src: url('fonts/Inter-Bold.woff2') format('woff2');
+            font-weight: 700;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        :root {
+            /* Vibrant Premium Theme */
+            --bg-body: #0f172a;
+            --bg-mesh: radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.15) 0, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(236, 72, 153, 0.1) 0, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.1) 0, transparent 50%),
+                radial-gradient(at 0% 100%, rgba(147, 51, 234, 0.1) 0, transparent 50%);
+            --glass-panel: rgba(255, 255, 255, 0.03);
+            --glass-panel-heavy: rgba(255, 255, 255, 0.07);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.4);
+            --danger: #f87171;
+            --warning: #fbbf24;
+            --success: #34d399;
+            --radius-xl: 24px;
+            --radius-lg: 18px;
+            --radius-md: 12px;
+            --shadow-premium: 0 10px 30px rgba(0, 0, 0, 0.15);
+            --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        body.light-mode {
+            --bg-body: #f8fafc;
+            --bg-mesh: radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.08) 0, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(236, 72, 153, 0.05) 0, transparent 50%);
+            --glass-panel: rgba(255, 255, 255, 0.6);
+            --glass-panel-heavy: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(0, 0, 0, 0.05);
+            --card-bg: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --primary: #4f46e5;
+            --shadow-premium: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            outline: none;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-body);
+            background-image: var(--bg-mesh);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        /* --- Animated Background Blobs --- */
+        .bg-blobs {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+            filter: blur(80px);
+            opacity: 0.6;
+        }
+
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            background: var(--primary);
+            opacity: 0.4;
+            animation: move 20s infinite alternate;
+        }
+
+        .blob-1 {
+            width: 400px;
+            height: 400px;
+            top: -100px;
+            left: -100px;
+            background: #4f46e5;
+            animation-duration: 25s;
+        }
+
+        .blob-2 {
+            width: 350px;
+            height: 350px;
+            bottom: -50px;
+            right: -50px;
+            background: #ec4899;
+            animation-duration: 30s;
+            animation-delay: -5s;
+        }
+
+        .blob-3 {
+            width: 300px;
+            height: 300px;
+            top: 40%;
+            left: 60%;
+            background: #3b82f6;
+            animation-duration: 22s;
+            animation-delay: -10s;
+        }
+
+        @keyframes move {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            50% {
+                transform: translate(100px, 50px) scale(1.1);
+            }
+
+            100% {
+                transform: translate(-50px, 100px) scale(0.9);
+            }
+        }
+
+        /* --- Layout Container --- */
+        .app-container {
+            width: 100%;
+            max-width: 1400px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            padding-bottom: 80px;
+            /* Space for bottom tabs */
+        }
+
+        /* --- Header Section --- */
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, var(--primary), #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .date-badge {
+            display: inline-block;
+            padding: 0.35rem 1rem;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        body.dark-mode .date-badge {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* --- Control Hub (Add Task Modal) --- */
+        .control-hub {
+            background: var(--glass-panel);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            padding: 0.5rem 0.5rem 0.5rem 1.5rem;
+            box-shadow: var(--shadow-lg);
+            margin: 0;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 1rem;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .input-row {
+            flex: 1;
+            display: flex;
+            align-items: center;
+        }
+
+        .main-input-wrapper {
+            flex: 1;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 0.8rem 0;
+            border: none;
+            background: transparent;
+            color: var(--text-primary);
+            font-size: 1rem;
+            outline: none;
+        }
+
+        /* Priority Toggle Design */
+        .priority-and-actions {
+            display: flex;
+            align-items: center;
+        }
+
+        .priority-selector {
+            display: flex;
+            background: rgba(0, 0, 0, 0.05);
+            padding: 4px;
+            border-radius: 30px;
+            gap: 2px;
+        }
+
+        .radio-label {
+            cursor: pointer;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: var(--transition);
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .radio-label input[type="radio"] {
+            display: none;
+        }
+
+        .radio-label:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Active State Highlights */
+        .radio-label:has(input:checked) {
+            background: var(--card-bg);
+            box-shadow: var(--shadow-sm);
+            color: var(--text-primary);
+        }
+
+        .p-high:has(input:checked) {
+            color: var(--danger) !important;
+        }
+
+        .p-med:has(input:checked) {
+            color: var(--warning) !important;
+        }
+
+        .p-low:has(input:checked) {
+            color: var(--success) !important;
+        }
+
+        /* --- Redesigned Settings Card --- */
+        .settings-card {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -60%) scale(0.95);
+            width: 95%;
+            max-width: 480px;
+            max-height: 85vh;
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .settings-card.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+            background: rgba(0, 0, 0, 0.02);
+            flex-shrink: 0;
+        }
+
+        .settings-header h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .close-settings {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: var(--transition);
+            padding: 4px;
+            line-height: 1;
+        }
+
+        .close-settings:hover {
+            color: var(--danger);
+        }
+
+        .settings-section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        .section-title {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            margin-bottom: 0.1rem;
+            opacity: 0.8;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 0.6rem;
+        }
+
+        .settings-grid.three-cols {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .setting-button {
+            background: rgba(0, 0, 0, 0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            padding: 0.75rem 0.5rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            text-align: center;
+        }
+
+        body.dark-mode .setting-button {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .setting-button:hover {
+            background: var(--bg-body);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+            border-color: var(--primary);
+        }
+
+        .setting-button .icon {
+            font-size: 1.25rem;
+        }
+
+        .setting-button .label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Custom Scrollbar for Modal Body */
+        .modal-body::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .modal-body::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .modal-body::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        body.dark-mode .modal-body::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .section-title.danger {
+            color: var(--danger);
+            opacity: 1;
+        }
+
+        .setting-button.danger {
+            background: rgba(var(--danger-rgb, 239, 68, 68), 0.05);
+            border-color: rgba(var(--danger-rgb, 239, 68, 68), 0.2);
+        }
+
+        .setting-button.danger:hover {
+            background: var(--danger);
+            border-color: var(--danger);
+            color: white;
+        }
+
+        .setting-button.danger:hover .icon,
+        .setting-button.danger:hover .label {
+            color: white;
+        }
+
+        /* Support Section Styling */
+        .support-section {
+            margin-top: 0.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .support-msg {
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .support-msg a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .support-msg a:hover {
+            text-decoration: underline;
+        }
+
+        .bmac-btn:hover {
+            background: #FFDD00 !important;
+            border-color: #FFDD00;
+        }
+
+        .bmac-btn:hover .label {
+            color: #000000;
+        }
+
+        .kofi-btn:hover {
+            background: #ff5e5b !important;
+            border-color: #ff5e5b;
+        }
+
+        .kofi-btn:hover .label {
+            color: #ffffff;
+        }
+
+        .setting-button.bmac-btn,
+        .setting-button.kofi-btn {
+            text-decoration: none;
+        }
+
+        /* --- Kanban Board Grid --- */
+        .board-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            align-items: start;
+        }
+
+        .column {
+            background: var(--glass-panel);
+            border-radius: var(--radius-lg);
+            padding: 0.8rem;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            min-height: 500px;
+            border: 1px solid var(--glass-border);
+            transition: var(--transition);
+        }
+
+        .col-header {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+            margin-bottom: 0.5rem;
+            padding: 0.8rem 0;
+            border-bottom: 3px solid;
+        }
+
+        .col-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .col-subtitle {
+            font-size: 0.7rem;
+            font-weight: 500;
+            opacity: 0.8;
+            color: var(--text-secondary);
+        }
+
+        .h-todo {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .h-backlog {
+            border-color: var(--text-secondary);
+            color: var(--text-secondary);
+        }
+
+        .h-progress {
+            border-color: var(--warning);
+            color: var(--warning);
+        }
+
+        .h-done {
+            border-color: var(--success);
+            color: var(--success);
+        }
+
+        .count-bubble {
+            background: rgba(0, 0, 0, 0.05);
+            color: var(--text-primary);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+        }
+
+        .task-list {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            padding: 0.5rem 0;
+            overflow-y: auto;
+        }
+
+        /* --- Task Cards --- */
+        .task-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--glass-border);
+            border-left: 3px solid transparent;
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            margin-bottom: 0;
+            box-shadow: var(--shadow-sm);
+            cursor: pointer;
+            transition: var(--transition);
+            animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .task-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, transparent 100%);
+            pointer-events: none;
+        }
+
+        .task-card:hover,
+        .task-card:focus-visible {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-premium);
+            border-color: rgba(255, 255, 255, 0.4);
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+
+        .task-card.status-backlog {
+            background: rgba(107, 114, 128, 0.1);
+            border-left-color: #6b7280;
+        }
+
+        .task-card.status-todo {
+            background: rgba(99, 102, 241, 0.1);
+            border-left-color: #6366f1;
+        }
+
+        .task-card.status-inprogress {
+            background: rgba(245, 158, 11, 0.1);
+            border-left-color: #f59e0b;
+        }
+
+        .task-card.status-done {
+            background: rgba(16, 185, 129, 0.1);
+            border-left-color: #10b981;
+        }
+
+        body.dark-mode .task-card.status-backlog {
+            background: rgba(148, 163, 184, 0.08);
+        }
+
+        body.dark-mode .task-card.status-todo {
+            background: rgba(129, 140, 248, 0.08);
+        }
+
+        body.dark-mode .task-card.status-inprogress {
+            background: rgba(245, 158, 11, 0.08);
+        }
+
+        body.dark-mode .task-card.status-done {
+            background: rgba(16, 185, 129, 0.08);
+        }
+
+        .task-card:active {
+            cursor: grabbing;
+            transform: scale(0.98);
+        }
+
+        .task-body {
+            font-size: 0.95rem;
+            line-height: 1;
+            margin-bottom: 0.3rem;
+            color: var(--text-primary);
+        }
+
+        .task-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .delete-icon {
+            opacity: 0;
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: 0.2s;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+
+        .task-card:hover .delete-icon {
+            opacity: 1;
+        }
+
+        /* --- Bottom Tabs (Dock Style) --- */
+        .tabs-dock {
+            position: fixed;
+            bottom: 20px;
+            background: var(--card-bg);
+            padding: 0.5rem;
+            border-radius: 20px;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            gap: 0.5rem;
+            z-index: 100;
+            border: 1px solid var(--glass-border);
+        }
+
+        .tab-item {
+            padding: 0.6rem 1rem;
+            min-width: 60px;
+            border-radius: 14px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .tab-item:hover {
+            background: var(--bg-body);
+            color: var(--text-primary);
+        }
+
+        .tab-item.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 10px var(--primary-glow);
+        }
+
+        .tab-close {
+            font-size: 1.1rem;
+            line-height: 0;
+            opacity: 0.6;
+        }
+
+        .tab-close:hover {
+            opacity: 1;
+        }
+
+
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Eisenhower Matrix Styles */
+        .eisenhower-grid {
+            display: none;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto auto;
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 1200px;
+            margin: auto;
+            padding: 2rem 0;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .eisenhower-grid.active {
+            display: grid;
+        }
+
+        .matrix-mode .app-container {
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        /* --- Help Modal --- */
+        .shortcut-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .shortcut-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .shortcut-label {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        kbd {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-shadow: 0 2px 0 var(--border-color);
+            color: var(--text-primary);
+            display: inline-block;
+            font-size: 0.85rem;
+            font-weight: 700;
+            line-height: 1;
+            padding: 4px 8px;
+            white-space: nowrap;
+            font-family: inherit;
+        }
+
+        .help-trigger {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 40px;
+            height: 40px;
+            background: var(--glass-panel);
+            border: 1px solid var(--glass-border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-weight: bold;
+            transition: var(--transition);
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .help-trigger:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .matrix-quadrant {
+            background: var(--glass-panel);
+            border-radius: var(--radius-lg);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--glass-border);
+            position: relative;
+            overflow: hidden;
+            min-height: 250px;
+        }
+
+        .matrix-quadrant::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(to right, var(--quadrant-color), transparent);
+        }
+
+        .quadrant-urgent-important {
+            --quadrant-color: var(--danger);
+        }
+
+        .quadrant-not-urgent-important {
+            --quadrant-color: var(--primary);
+        }
+
+        .quadrant-urgent-not-important {
+            --quadrant-color: var(--warning);
+        }
+
+        .quadrant-not-urgent-not-important {
+            --quadrant-color: var(--success);
+        }
+
+        .quadrant-header {
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .quadrant-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .quadrant-subtitle {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .view-toggle-btn {
+            background: rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 0.6rem 1.2rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        body.dark-mode .view-toggle-btn {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .view-toggle-btn:hover {
+            background: var(--bg-body);
+            color: var(--text-primary);
+            border-color: var(--primary);
+        }
+
+        /* Responsive */
+        @media (max-width: 800px) {
+            .board-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .eisenhower-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: repeat(4, auto);
+                height: auto;
+                min-height: unset;
+            }
+
+            .input-row {
+                flex-direction: column;
+            }
+
+            .priority-and-actions {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: stretch;
+            }
+        }
+
+        .priority-selector {
+            display: flex;
+            background: rgba(0, 0, 0, 0.05);
+            padding: 4px;
+            border-radius: 30px;
+            gap: 2px;
+        }
+
+        .top-actions-wrapper {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            z-index: 1000;
+        }
+
+        .settings-btn {
+            width: 40px;
+            height: 40px;
+            background: var(--glass-panel);
+            border: 1px solid var(--glass-border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: var(--transition);
+            backdrop-filter: blur(10px);
+            font-size: 1.2rem;
+        }
+
+        .settings-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        body.hide-ui-buttons .top-actions-wrapper,
+        body.hide-ui-buttons .help-trigger {
+            display: none;
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: 0.3s;
+        }
+
+        .modal-backdrop.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* --- Minimal Modal Design --- */
+        .minimal-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -45%) scale(0.95);
+            width: 90%;
+            max-width: 500px;
+            background: var(--card-bg);
+            backdrop-filter: blur(40px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            z-index: 1100;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+            visibility: hidden;
+            padding: 0;
+        }
+
+        .minimal-modal.active {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+            pointer-events: auto;
+            visibility: visible;
+        }
+
+        .minimal-modal-content {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .minimal-modal #taskInput,
+        .minimal-modal #nameInput {
+            background: transparent;
+            border: none;
+            padding: 0.5rem 0;
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            outline: none;
+            resize: none;
+            min-height: 28px;
+            overflow: hidden;
+            line-height: 1.5;
+            font-family: inherit;
+            width: 100%;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .minimal-modal #taskInput::-webkit-scrollbar,
+        .minimal-modal #nameInput::-webkit-scrollbar {
+            display: none;
+        }
+
+        .minimal-modal #taskInput::placeholder {
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        .subtask-section {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .subtask-section #subtaskInput {
+            background: transparent;
+            border: none;
+            padding: 0.5rem 0;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            outline: none;
+            width: 100%;
+            font-family: inherit;
+            transition: color 0.2s ease;
+        }
+
+        .subtask-section #subtaskInput:focus {
+            color: var(--text-primary);
+        }
+
+        .subtask-section #subtaskInput::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.6;
+        }
+
+        .modal-subtask-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            margin-top: 0.5rem;
+        }
+
+        .modal-subtask-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.4rem 0;
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .remove-subtask {
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.8rem;
+            opacity: 0.5;
+            transition: all 0.2s ease;
+            padding: 2px 6px;
+        }
+
+        .remove-subtask:hover {
+            opacity: 1;
+            color: var(--danger);
+        }
+
+        .modal-hint {
+            margin-top: 1rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--glass-border);
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            opacity: 0.6;
+            text-align: center;
+        }
+
+        .standard-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -40%) scale(0.98);
+            width: 90%;
+            max-width: 420px;
+            background: var(--card-bg);
+            backdrop-filter: blur(30px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            z-index: 1100;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+            display: flex !important;
+            flex-direction: column !important;
+            overflow: hidden;
+            visibility: hidden;
+        }
+
+        .standard-modal.active {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+            pointer-events: auto;
+            visibility: visible;
+        }
+
+        .modal-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: transparent;
+        }
+
+        .modal-header h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: block;
+        }
+
+        /* --- Subtasks Styles --- */
+        .subtasks-container {
+            margin-top: 0.2rem;
+            padding-top: 0.5em;
+            border-top: 1.5px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .subtask-item {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .subtask-item:hover {
+            opacity: 0.8;
+        }
+
+        .subtask-checkbox {
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--primary);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: var(--transition);
+        }
+
+        .subtask-item.completed .subtask-checkbox {
+            background: var(--primary);
+        }
+
+        .subtask-item.completed .subtask-checkbox::after {
+            content: '✓';
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .subtask-item.completed .subtask-text {
+            text-decoration: line-through;
+            color: var(--text-secondary);
+        }
+
+        /* Subtask input area in modal */
+        .modal-subtasks-section {
+            margin-top: 0.5rem;
+            padding-top: 0.75rem;
+            border-top: none;
+        }
+
+        .subtask-input-wrapper {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .subtask-input-wrapper input {
+            flex: 1;
+            background: transparent;
+            border-radius: 0;
+            padding: 0.6rem 0;
+            border: none;
+            border-bottom: 1px solid var(--glass-border);
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+            color: var(--text-primary);
+            min-height: 20px;
+            overflow: hidden;
+            resize: none;
+            line-height: 1.4;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .subtask-input-wrapper input::-webkit-scrollbar {
+            display: none;
+        }
+
+        body.dark-mode .subtask-input-wrapper input {
+            background: transparent;
+        }
+
+        .subtask-input-wrapper input:focus {
+            border-bottom-color: var(--primary);
+            background: transparent;
+            outline: none;
+        }
+
+        .add-subtask-btn {
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.2s ease;
+        }
+
+        .add-subtask-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .modal-subtask-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .modal-subtask-item {
+            background: transparent;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(var(--glass-border), 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+        }
+
+        body.dark-mode .modal-subtask-item {
+            background: transparent;
+        }
+
+        .remove-subtask {
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-weight: 400;
+            padding: 2px 6px;
+            transition: all 0.2s ease;
+        }
+
+        .remove-subtask:hover {
+            color: var(--danger);
+        }
+
+        /* --- Quick Add Button --- */
+        .quick-add-btn {
+            width: 100%;
+            padding: 0.8rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px dashed var(--glass-border);
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .quick-add-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .standard-modal {
+            flex-direction: column !important;
+            padding: 0 !important;
+            border-radius: var(--radius-lg) !important;
+            overflow: hidden;
+            max-width: 450px !important;
+        }
+
+        .modal-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        body.dark-mode .modal-header {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .modal-header h2 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .close-modal-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .close-modal-btn:hover {
+            color: var(--text-primary);
+            transform: scale(1.1);
+        }
+
+        .modal-body {
+            padding: 0 1.5rem 1.5rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            max-height: 65vh;
+            overflow-y: auto;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .input-group label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .input-group input[type="text"],
+        .input-group textarea {
+            background: transparent;
+            border: none;
+            border-bottom: 1.5px solid var(--glass-border);
+            border-radius: 0;
+            padding: 0.75rem 0;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            width: 100%;
+            color: var(--text-primary);
+            outline: none;
+            font-family: inherit;
+            resize: none;
+            min-height: 24px;
+            overflow: hidden;
+            line-height: 1.4;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .input-group textarea::-webkit-scrollbar {
+            display: none;
+        }
+
+        body.dark-mode .input-group input[type="text"],
+        body.dark-mode .input-group textarea {
+            background: transparent;
+        }
+
+        .input-group input[type="text"]:focus,
+        .input-group textarea:focus {
+            border-bottom-color: var(--primary);
+            background: transparent;
+        }
+
+        .modal-footer {
+            padding: 1rem 1.5rem;
+            border-top: none;
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            background: transparent;
+        }
+
+        body.dark-mode .modal-footer {
+            background: transparent;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 0.65rem 1rem;
+            border-radius: 10px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(0, 0, 0, 0.05);
+            color: var(--text-primary);
+        }
+
+        body.dark-mode .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.65rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            box-shadow: 0 2px 8px var(--primary-glow);
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px var(--primary-glow);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media print {
+            @page {
+                size: landscape;
+                margin: 0.5cm;
+            }
+
+            html,
+            body {
+                background: white !important;
+                color: black !important;
+                width: 100% !important;
+                height: auto !important;
+                min-height: auto !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: visible !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .bg-blobs,
+            .tabs-dock,
+            .help-trigger,
+            .delete-icon,
+            .close-settings,
+            .settings-btn,
+            .modal-backdrop,
+            .minimal-modal,
+            .control-hub,
+            .settings-card,
+            .top-actions-wrapper {
+                display: none !important;
+            }
+
+            .app-container {
+                padding: 0 !important;
+                margin: 0 !important;
+                max-width: none !important;
+                width: 100% !important;
+                box-shadow: none !important;
+                border: none !important;
+            }
+
+            header {
+                display: block !important;
+                margin-bottom: 20px !important;
+                text-align: center !important;
+                border: none !important;
+                box-shadow: none !important;
+                background: transparent !important;
+            }
+
+            header h1 {
+                font-size: 24pt !important;
+                color: black !important;
+                margin-bottom: 5px !important;
+            }
+
+            .date-badge {
+                display: block !important;
+                font-size: 14pt !important;
+                color: #666 !important;
+                background: transparent !important;
+                border: none !important;
+                padding: 0 !important;
+            }
+
+            #welcome-text {
+                display: block !important;
+            }
+
+            .app-container {
+                padding: 0 !important;
+                margin: 0 !important;
+                max-width: none !important;
+                width: 100% !important;
+                box-shadow: none !important;
+                border: none !important;
+            }
+
+            .board-grid,
+            .eisenhower-grid {
+                margin-top: 0 !important;
+                padding-top: 0 !important;
+            }
+
+            .board-grid {
+                display: grid !important;
+                grid-template-columns: repeat(4, 1fr) !important;
+                gap: 10px !important;
+            }
+
+            .column {
+                min-height: auto !important;
+                border: 1px solid #ccc !important;
+                background: transparent !important;
+                padding: 0.5rem !important;
+            }
+
+            .task-card {
+                break-inside: avoid !important;
+                border: 1px solid #eee !important;
+                background: white !important;
+                box-shadow: none !important;
+                margin-bottom: 5px !important;
+                padding: 0.5rem !important;
+            }
+
+            .eisenhower-grid {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr !important;
+                gap: 10px !important;
+                height: auto !important;
+                padding: 0 !important;
+            }
+
+            .matrix-quadrant {
+                min-height: 250px !important;
+                border: 1px solid #ccc !important;
+                padding: 0.5rem !important;
+            }
+
+
+            .app-container,
+            .app-container * {
+                color: black !important;
+                -webkit-text-fill-color: black !important;
+            }
+        }
+
+        /* --- PDF Friendly Mode (triggered via 'P' shortcut) --- */
+        body.pdf-mode {
+            background: white !important;
+            color: black !important;
+        }
+
+        body.pdf-mode .bg-blobs,
+        body.pdf-mode .tabs-dock,
+        body.pdf-mode .help-trigger,
+        body.pdf-mode .settings-btn,
+        body.pdf-mode .top-actions-wrapper,
+        body.pdf-mode .control-hub,
+        body.pdf-mode .modal-backdrop,
+        body.pdf-mode .standard-modal,
+        body.pdf-mode .minimal-modal {
+            display: none !important;
+        }
+
+        body.pdf-mode header {
+            display: block !important;
+            text-align: center !important;
+            margin-bottom: 2rem !important;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        body.pdf-mode #welcome-text {
+            display: block !important;
+            color: black !important;
+            font-size: 24pt !important;
+            margin-bottom: 0.5rem !important;
+        }
+
+        body.pdf-mode .date-badge {
+            display: block !important;
+            color: #666 !important;
+            background: transparent !important;
+            border: none !important;
+            font-size: 14pt !important;
+            padding: 0 !important;
+        }
+
+        body.pdf-mode .column,
+        body.pdf-mode .matrix-quadrant {
+            background: #fafafa !important;
+            border: 1px solid #ddd !important;
+            box-shadow: none !important;
+        }
+
+        body.pdf-mode .task-card {
+            background: white !important;
+            border: 1px solid #eee !important;
+            box-shadow: none !important;
+            color: black !important;
+        }
+
+        body.pdf-mode .task-card * {
+            color: black !important;
+            -webkit-text-fill-color: black !important;
+        }
+
+        body.pdf-mode .app-container {
+            max-width: none !important;
+            padding: 1rem !important;
+            background: white !important;
+            box-shadow: none !important;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="bg-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <div class="app-container">
+        <header>
+            <h1 id="welcome-text">Loading Kanban...</h1>
+            <div class="date-badge" id="date-display">...</div>
+        </header>
+
+        <!-- Top Right Settings Icon -->
+        <div class="top-actions-wrapper">
+            <button class="settings-btn" title="Settings">⚙️</button>
+        </div>
+        <input type="file" id="fileInput" hidden>
+
+        <!-- Modals -->
+        <div class="modal-backdrop" id="modalBackdrop"></div>
+
+        <!-- Add Task Modal - Minimal Design -->
+        <div class="minimal-modal" id="addTaskModal">
+            <div class="minimal-modal-content">
+                <h2 id="modalTitle" style="display:none"></h2>
+                <textarea id="taskInput" placeholder="What needs to be done?" rows="1"></textarea>
+                <div class="subtask-section">
+                    <input type="text" id="subtaskInput" placeholder="+ Add subtask (Enter to add)">
+                    <div class="modal-subtask-list" id="modalSubtaskList"></div>
+                </div>
+                <div class="modal-hint">Enter to save • Ctrl+Enter in subtask • Esc to cancel</div>
+            </div>
+        </div>
+
+        <!-- Redesigned Settings Modal -->
+        <div class="settings-card standard-modal" id="settingsModal">
+            <div class="modal-header">
+                <h2>Settings</h2>
+                <button class="close-modal-btn" id="closeSettingsBtn" title="Close">✕</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="settings-section">
+                    <div class="section-title">Board Management</div>
+                    <div class="settings-grid three-cols">
+                        <button class="setting-button" id="newBoardBtn" title="New Board">
+                            <span class="icon">➕</span>
+                            <span class="label">New Board</span>
+                        </button>
+                        <button class="setting-button" id="renameBoardBtn" title="Rename Active Board">
+                            <span class="icon">✏️</span>
+                            <span class="label">Rename Board</span>
+                        </button>
+                        <button class="setting-button" id="deleteBoardBtn" title="Delete Active Board">
+                            <span class="icon">🗑️</span>
+                            <span class="label">Delete Board</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="section-title">Board Maintenance</div>
+                    <div class="settings-grid">
+                        <button class="setting-button" id="clearAllBtn" title="Clear All Tasks">
+                            <span class="icon">🧹</span>
+                            <span class="label">Clear Tasks</span>
+                        </button>
+                        <button class="setting-button" id="toggleThemeBtn" title="Toggle Dark/Light Mode">
+                            <span class="icon">🌗</span>
+                            <span class="label">Toggle Theme</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="section-title">UI Preferences</div>
+                    <div class="settings-grid">
+                        <button class="setting-button" id="toggleTabsBtn" title="Show/Hide Bottom Tabs">
+                            <span class="icon">🔖</span>
+                            <span class="label">Tabs Dock: <span id="tabsToggleStatus">ON</span></span>
+                        </button>
+                        <button class="setting-button" id="toggleUIButtonsBtn" title="Show/Hide Floating Buttons">
+                            <span class="icon">🔘</span>
+                            <span class="label">UI Buttons: <span id="uiButtonsToggleStatus">ON</span></span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="section-title">Data & Backup</div>
+                    <div class="settings-grid">
+                        <button class="setting-button" id="exportBtn" title="Export Data to JSON">
+                            <span class="icon">💾</span>
+                            <span class="label">Export Data</span>
+                        </button>
+                        <button class="setting-button" id="importTrigger" title="Import Data from JSON">
+                            <span class="icon">📂</span>
+                            <span class="label">Import Data</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="section-title danger">Danger Zone</div>
+                    <div class="settings-grid">
+                        <button class="setting-button danger" id="resetAllBtn" title="Reset All Data and Settings">
+                            <span class="icon">⚠️</span>
+                            <span class="label">Reset All</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="settings-section support-section">
+                    <div class="section-title">Support & Project</div>
+                    <p class="support-msg">This app is ads-free and <a href="https://github.com/RustinTech/Kanban"
+                            target="_blank">OpenSource</a>. Consider supporting the project!</p>
+                    <div class="settings-grid three-cols">
+                        <a href="https://github.com/RustinTech/Kanban" target="_blank" class="setting-button">
+                            <span class="icon">💻</span>
+                            <span class="label">GitHub</span>
+                        </a>
+                        <a href="https://buymeacoffee.com/rustin" target="_blank" class="setting-button bmac-btn">
+                            <span class="icon">☕</span>
+                            <span class="label">Coffee</span>
+                        </a>
+                        <a href="https://ko-fi.com/rustin" target="_blank" class="setting-button kofi-btn">
+                            <span class="icon">❤️</span>
+                            <span class="label">Ko-fi</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Board Name Modal - Minimal Design -->
+        <div class="minimal-modal" id="nameModal">
+            <div class="minimal-modal-content">
+                <h2 id="nameModalTitle" style="display:none"></h2>
+                <input type="text" id="nameInput" placeholder="Enter board name...">
+                <div class="modal-hint">Enter to save • Esc to cancel</div>
+            </div>
+        </div>
+
+        <!-- Help & Shortcuts Modal -->
+        <div class="standard-modal" id="helpModal" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>Shortcuts & Help</h2>
+                <button class="close-modal-btn" id="closeHelpBtn">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="shortcut-list">
+                    <div class="shortcut-item">
+                        <span class="shortcut-label">Add New Task</span>
+                        <kbd>N</kbd>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-label">Add New Board</span>
+                        <kbd>B</kbd>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-label">Add Task in specific area</span>
+                        <kbd>Double Click</kbd>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-label">Save Task / Board</span>
+                        <kbd>Enter</kbd>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-label">Add Subtask</span>
+                        <kbd>Enter</kbd>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-label">Save & Close (from subtask)</span>
+                        <kbd>Ctrl+Enter</kbd>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-label">Cancel / Close Modal</span>
+                        <kbd>Esc</kbd>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-label">Toggle View (Kanban/Matrix)</span>
+                        <kbd>M</kbd>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-label">Switch Boards (Tabs)</span>
+                        <kbd>`</kbd> or <kbd>~</kbd>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-label">Select Tasks</span>
+                        <kbd>Tab</kbd>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-label">Import Data</span>
+                        <kbd>I</kbd>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-label">Export Data</span>
+                        <kbd>O</kbd>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-label">Export PDF</span>
+                        <kbd>P</kbd>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-label">Print Board</span>
+                        <kbd>Ctrl+P</kbd>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-label">Open Settings</span>
+                        <kbd>S</kbd>
+                    </div>
+                    <div class="shortcut-item">
+                        <span class="shortcut-label">Show Shortcuts</span>
+                        <kbd>?</kbd> or <kbd>/</kbd>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="help-trigger" id="helpBtn" title="Help & Shortcuts">?</div>
+
+        <div class="board-grid">
+            <div class="column">
+                <div class="col-header h-todo">
+                    <div class="col-title-row">
+                        <span>🔥 Do First</span>
+                        <span class="count-bubble" id="count-todo">0</span>
+                    </div>
+                    <div class="col-subtitle">Urgent & Important</div>
+                </div>
+                <div class="task-list" id="todo"></div>
+            </div>
+
+            <div class="column">
+                <div class="col-header h-progress">
+                    <div class="col-title-row">
+                        <span>📅 Schedule</span>
+                        <span class="count-bubble" id="count-inprogress">0</span>
+                    </div>
+                    <div class="col-subtitle">Important & Not Urgent</div>
+                </div>
+                <div class="task-list" id="inprogress"></div>
+            </div>
+
+            <div class="column">
+                <div class="col-header h-done">
+                    <div class="col-title-row">
+                        <span>🤝 Delegate</span>
+                        <span class="count-bubble" id="count-done">0</span>
+                    </div>
+                    <div class="col-subtitle">Urgent & Not Important</div>
+                </div>
+                <div class="task-list" id="done"></div>
+            </div>
+
+            <div class="column">
+                <div class="col-header h-backlog">
+                    <div class="col-title-row">
+                        <span>🗑️ Eliminate</span>
+                        <span class="count-bubble" id="count-backlog">0</span>
+                    </div>
+                    <div class="col-subtitle">Not Urgent or Important</div>
+                </div>
+                <div class="task-list" id="backlog"></div>
+            </div>
+        </div>
+
+
+        <!-- Eisenhower Matrix -->
+        <div class="eisenhower-grid" id="eisenhower-grid">
+            <div class="matrix-quadrant quadrant-urgent-important">
+                <div class="quadrant-header">
+                    <div class="quadrant-title">🔥 Do First</div>
+                    <div class="quadrant-subtitle">Urgent & Important <span class="count-bubble" id="count-ui">0</span>
+                    </div>
+                </div>
+                <div class="task-list" id="urgent-important"></div>
+            </div>
+
+            <div class="matrix-quadrant quadrant-not-urgent-important">
+                <div class="quadrant-header">
+                    <div class="quadrant-title">📅 Schedule</div>
+                    <div class="quadrant-subtitle">Not Urgent & Important <span class="count-bubble"
+                            id="count-nui">0</span></div>
+                </div>
+                <div class="task-list" id="not-urgent-important"></div>
+            </div>
+
+            <div class="matrix-quadrant quadrant-urgent-not-important">
+                <div class="quadrant-header">
+                    <div class="quadrant-title">🤝 Delegate</div>
+                    <div class="quadrant-subtitle">Urgent & Not Important <span class="count-bubble"
+                            id="count-uni">0</span></div>
+                </div>
+                <div class="task-list" id="urgent-not-important"></div>
+            </div>
+
+            <div class="matrix-quadrant quadrant-not-urgent-not-important">
+                <div class="quadrant-header">
+                    <div class="quadrant-title">🗑️ Eliminate</div>
+                    <div class="quadrant-subtitle">Not Urgent & Not Important <span class="count-bubble"
+                            id="count-nuni">0</span></div>
+                </div>
+                <div class="task-list" id="not-urgent-not-important"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tabs-dock" id="tabs-container"></div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
