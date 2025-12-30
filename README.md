@@ -2,6 +2,9 @@
 
 A premium, offline-first Kanban board and Eisenhower Matrix application. Designed for speed, privacy, and visual excellence.
 
+![Matrix Preview](https://github.com/RustinTech/matrix/blob/main/screenshot/screenshot.png)
+![Matrix Mode](https://github.com/RustinTech/matrix/blob/main/screenshot/matrixmode.png)
+
 ## 🚀 Two Ways to Use
 
 ### 1. Standalone Web Page (`index.html`)
@@ -68,3 +71,4 @@ Speed is at the core of the experience. Master these shortcuts to stay in the fl
 - Modern ES6+ JavaScript
 - [html2pdf.js](https://github.com/eKoopmans/html2pdf.js) — Locally bundled for PDF generation.
 - [Inter Font](https://fonts.google.com/specimen/Inter) — Clean, legible typography.
+
